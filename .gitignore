@@ -1,9 +1,9 @@
 # Environment secrets
 .env
 
-# Supabase local config
+# Supabase local / temp files
+supabase/.temp/
 .supabase/
-.supabase/.temp
 
 # Editor / OS junk
 .vscode/
