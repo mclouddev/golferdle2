@@ -1,4 +1,4 @@
-// ========= Golf Guesser (script.js) — 18 Holes + Local Leaderboard + Robust Image Loading =========
+// ========= Golf Guesser (script.js) — 18 Holes + Leaderboard + Robust Image Loading + Autocomplete =========
 
 // DOM
 const gameContainer = document.getElementById("game-container");
@@ -14,6 +14,9 @@ const closeButton = document.querySelector(".close-button");
 
 // Guess history
 const guessHistoryEl = document.getElementById("guess-history");
+
+// Autocomplete
+const autocompleteList = document.getElementById("autocomplete-list");
 
 // Round UI stats
 const holeNumberSpan = document.getElementById("hole-number");
@@ -32,8 +35,6 @@ const endError = document.getElementById("end-error");
 
 // Leaderboard
 const leaderboardList = document.getElementById("leaderboard-list");
-const resetLeaderboardButton = document.getElementById("reset-leaderboard-button");
-
 const LEADERBOARD_KEY = "golf_guesser_leaderboard_v1";
 
 // Modal rules
@@ -54,8 +55,7 @@ const maxGuesses = 7;
 const missPenaltyStrokes = maxGuesses + 1; // 8
 
 // Pixelation model: more wrong guesses => clearer
-// If start is too pixelated, increase initialPixelBlocks (e.g. 18–24)
-const initialPixelBlocks = 25;
+const initialPixelBlocks = 20;
 const pixelBlockIncrement = 6;
 
 // Data
@@ -80,6 +80,8 @@ const images = [
   { path: "images/mckibbin.jpg", answer: "Tommy Mckibbin" },
   { path: "images/day.jpg", answer: "Jason Day" },
   { path: "images/hatton.jpg", answer: "Tyrell Hatton" },
+  { path: "images/yuan.jpg", answer: "Carl Yuan" },
+  { path: "images/lowry.jpg", answer: "Shane Lowry" },
   { path: "images/adamscott.jpg", answer: "Adam Scott" },
   { path: "images/woods.jpg", answer: "Tiger Woods" },
   { path: "images/mickelson.jpg", answer: "Phil Mickelson" },
@@ -89,6 +91,7 @@ const images = [
   { path: "images/morikawa.jpg", answer: "Collin Morikawa" },
   { path: "images/wolff.jpg", answer: "Matthew Wolff" },
   { path: "images/minwoo.jpg", answer: "Min Woo Lee" },
+  { path: "images/henley.jpg", answer: "Rusell Henley" },
   { path: "images/hideki.jpg", answer: "Hideki Matsuyama" }
 ];
 
@@ -96,6 +99,96 @@ const images = [
 const aliases = new Map([
   ["john rahm", "jon rahm"],
 ]);
+
+// ========= Autocomplete model =========
+const ALL_GOLFER_NAMES = Array.from(new Set(images.map((g) => g.answer))).sort((a, b) =>
+  a.localeCompare(b)
+);
+
+let acIndex = -1;
+let acOpen = false;
+let lastSuggestions = [];
+
+function openAutocomplete() {
+  acOpen = true;
+  autocompleteList.style.display = "block";
+  guessInput.setAttribute("aria-expanded", "true");
+}
+
+function closeAutocomplete() {
+  acOpen = false;
+  acIndex = -1;
+  lastSuggestions = [];
+  autocompleteList.style.display = "none";
+  autocompleteList.innerHTML = "";
+  guessInput.setAttribute("aria-expanded", "false");
+}
+
+function normalize(str) {
+  return String(str).toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function buildSuggestions(query) {
+  const q = normalize(query);
+  if (!q) return [];
+
+  return ALL_GOLFER_NAMES
+    .filter(name => normalize(name).startsWith(q))
+    .slice(0, 8);
+}
+
+function setActiveSuggestion(items) {
+  items.forEach((el, idx) => el.classList.toggle("active", idx === acIndex));
+}
+
+function applySuggestion(text) {
+  guessInput.value = text;
+  closeAutocomplete();
+  guessInput.focus();
+}
+
+function renderSuggestions(list) {
+  autocompleteList.innerHTML = "";
+
+  if (!list.length || holeEnded || !isImageLoaded) {
+    closeAutocomplete();
+    return;
+  }
+
+  lastSuggestions = list;
+
+  list.forEach((name) => {
+    const row = document.createElement("div");
+    row.className = "autocomplete-item";
+    row.setAttribute("role", "option");
+    row.textContent = name;
+
+    // mousedown so it selects before blur closes the list
+    row.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      applySuggestion(name);
+    });
+
+    autocompleteList.appendChild(row);
+  });
+
+  openAutocomplete();
+}
+
+// Hook autocomplete events
+guessInput.addEventListener("input", () => {
+  if (holeEnded || !isImageLoaded) {
+    closeAutocomplete();
+    return;
+  }
+  const list = buildSuggestions(guessInput.value);
+  renderSuggestions(list);
+});
+
+guessInput.addEventListener("blur", () => {
+  // delay allows click selection to register
+  setTimeout(() => closeAutocomplete(), 120);
+});
 
 // Canvas + image
 const ctx = gameContainer.getContext("2d");
@@ -113,8 +206,8 @@ let isImageLoaded = false;
 let holeEnded = false;
 let currentImageIndex = 0;
 
-let submitsThisHole = 0;       // total submits this hole
-let wrongGuessesThisHole = 0;  // controls pixel reveal
+let submitsThisHole = 0;        // total submits this hole
+let wrongGuessesThisHole = 0;   // controls pixel reveal
 let guessedSet = new Set();
 
 // 18-hole deck (no repeats within a round)
@@ -122,14 +215,57 @@ let holeDeck = [];
 let deckPos = 0;
 
 // Events
-guessButton.addEventListener("click", handleGuess);
+guessButton.addEventListener("click", () => {
+  closeAutocomplete();
+  handleGuess();
+});
 nextHoleButton.addEventListener("click", goToNextHole);
 restartButton.addEventListener("click", restartRound);
 
+// ✅ Keydown logic: supports arrows + Enter selecting suggestion,
+// and AFTER HOLE ENDS: Enter advances to next hole.
 guessInput.addEventListener("keydown", (event) => {
+  const items = Array.from(autocompleteList.querySelectorAll(".autocomplete-item"));
+
+  if (event.key === "ArrowDown" && items.length) {
+    event.preventDefault();
+    if (!acOpen) openAutocomplete();
+    acIndex = Math.min(items.length - 1, acIndex + 1);
+    setActiveSuggestion(items);
+    return;
+  }
+
+  if (event.key === "ArrowUp" && items.length) {
+    event.preventDefault();
+    if (!acOpen) openAutocomplete();
+    acIndex = Math.max(0, acIndex - 1);
+    setActiveSuggestion(items);
+    return;
+  }
+
   if (event.key === "Enter") {
     event.preventDefault();
+
+    // ✅ NEW: If the hole is over, Enter proceeds to next hole / finish round
+    if (holeEnded && !nextHoleButton.disabled) {
+      closeAutocomplete();
+      goToNextHole();
+      return;
+    }
+
+    // If a suggestion is highlighted, choose it
+    if (acOpen && items.length && acIndex >= 0) {
+      applySuggestion(items[acIndex].textContent);
+      return;
+    }
+
+    closeAutocomplete();
     handleGuess();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    closeAutocomplete();
   }
 });
 
@@ -140,17 +276,7 @@ playAgainButton.addEventListener("click", () => {
   restartRound();
 });
 
-// Leaderboard reset
-resetLeaderboardButton.addEventListener("click", () => {
-  localStorage.removeItem(LEADERBOARD_KEY);
-  renderLeaderboard();
-});
-
 // Helpers
-function normalize(str) {
-  return str.toLowerCase().trim().replace(/\s+/g, " ");
-}
-
 function displayMessage(message) {
   messageContainer.textContent = message;
 }
@@ -293,12 +419,10 @@ function revealImage() {
 }
 
 /**
- * Robust hole loader:
- * - Uses the deck index if possible
- * - If the image fails to load (404, typo, case mismatch), it retries with a fallback image
- * - After multiple failures, shows a clear error message
+ * Robust hole loader
  */
 function loadHole() {
+  closeAutocomplete();
   isImageLoaded = false;
   holeEnded = false;
 
@@ -352,7 +476,6 @@ function loadHole() {
       displayMessage("That hole’s photo failed to load — skipping to a new one...");
 
       // If the deck entry was bad, advance deckPos so you don't keep landing on it
-      // (Only do this if we're currently attempting the deck's chosen image)
       if (holeDeck[deckPos] === currentImageIndex && deckPos < holeDeck.length - 1) {
         deckPos += 1;
       }
@@ -373,6 +496,7 @@ function loadHole() {
 }
 
 function endHole(win) {
+  closeAutocomplete();
   holeEnded = true;
 
   const correctAnswer = images[currentImageIndex].answer;
@@ -383,9 +507,9 @@ function endHole(win) {
   totalStrokesSpan.textContent = String(totalStrokes);
 
   if (win) {
-    displayMessage(`🏌️ Nice! "${correctAnswer}" — Strokes: ${strokes}.`);
+    displayMessage(`🏌️ Nice! "${correctAnswer}" — Strokes: ${strokes}. (Press Enter)`);
   } else {
-    displayMessage(`⛳ Missed it! Answer: "${correctAnswer}" — Strokes: ${strokes}.`);
+    displayMessage(`⛳ Missed it! Answer: "${correctAnswer}" — Strokes: ${strokes}. (Press Enter)`);
   }
 
   revealImage();
@@ -393,6 +517,9 @@ function endHole(win) {
   updateTopBar();
 
   nextHoleButton.textContent = (holeNumber === TOTAL_HOLES) ? "Finish Round" : "Next Hole";
+
+  // ✅ Nice UX: focus Next so keyboard users can just press Enter
+  nextHoleButton.focus();
 }
 
 function handleGuess() {
@@ -404,6 +531,8 @@ function handleGuess() {
     guessInput.focus();
     return;
   }
+
+  closeAutocomplete();
 
   const guessNorm = normalize(guessRaw);
   const guessFinal = aliases.get(guessNorm) ?? guessNorm;
@@ -444,6 +573,7 @@ function handleGuess() {
   guessInput.value = "";
   guessInput.focus();
 }
+
 guessInput.addEventListener("focus", () => {
   setTimeout(() => {
     try {
@@ -451,7 +581,6 @@ guessInput.addEventListener("focus", () => {
     } catch { }
   }, 150);
 });
-
 
 function goToNextHole() {
   if (!holeEnded) return;
@@ -467,6 +596,7 @@ function goToNextHole() {
 }
 
 function restartRound() {
+  closeAutocomplete();
   holeNumber = 1;
   totalStrokes = 0;
 
@@ -487,7 +617,7 @@ function showEndModal() {
   initialsInput.focus();
 }
 
-// Leaderboard logic
+// Leaderboard logic (local)
 function loadLeaderboard() {
   try {
     const raw = localStorage.getItem(LEADERBOARD_KEY);
@@ -511,7 +641,8 @@ function renderLeaderboard() {
   leaderboardList.innerHTML = "";
 
   if (entries.length === 0) {
-    leaderboardList.innerHTML = `<div class="lb-row"><div class="lb-rank">—</div><div class="lb-name">No scores yet</div><div class="lb-score">—</div></div>`;
+    leaderboardList.innerHTML =
+      `<div class="lb-row"><div class="lb-rank">—</div><div class="lb-name">No scores yet</div><div class="lb-score">—</div></div>`;
     return;
   }
 

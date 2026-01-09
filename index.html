@@ -18,10 +18,22 @@
     </div>
 
     <div class="stats-right">
-      <div class="stat"><span class="label">Hole</span><span class="value"><span id="hole-number">1</span>/<span id="total-holes">18</span></span></div>
-      <div class="stat"><span class="label">Strokes</span><span id="total-strokes" class="value">0</span></div>
-      <div class="stat"><span class="label">This Hole</span><span id="hole-strokes" class="value">0</span></div>
-      <div class="stat"><span class="label">Remaining</span><span id="remaining-guesses" class="value">7</span></div>
+      <div class="stat">
+        <span class="label">Hole</span>
+        <span class="value"><span id="hole-number">1</span>/<span id="total-holes">18</span></span>
+      </div>
+      <div class="stat">
+        <span class="label">Strokes</span>
+        <span id="total-strokes" class="value">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">This Hole</span>
+        <span id="hole-strokes" class="value">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">Remaining</span>
+        <span id="remaining-guesses" class="value">7</span>
+      </div>
     </div>
   </nav>
 
@@ -75,13 +87,21 @@
       <div id="message-container" class="message"></div>
 
       <div class="guess-container">
-        <input
-          type="text"
-          id="guess-input"
-          placeholder="Enter a name"
-          autocomplete="off"
-          autocapitalize="words"
-        />
+        <!-- Autocomplete wrapper -->
+        <div class="guess-input-wrap">
+          <input
+            type="text"
+            id="guess-input"
+            placeholder="Enter a name"
+            autocomplete="off"
+            autocapitalize="words"
+            aria-autocomplete="list"
+            aria-controls="autocomplete-list"
+            aria-expanded="false"
+          />
+          <div id="autocomplete-list" class="autocomplete-list" role="listbox" aria-label="Suggestions"></div>
+        </div>
+
         <button id="guess-button" class="btn btn-primary">Submit</button>
         <button id="next-hole-button" class="btn btn-secondary" disabled>Next Hole</button>
         <button id="restart-button" class="btn btn-secondary">Restart Round</button>
@@ -100,17 +120,13 @@
     <!-- Leaderboard -->
     <section class="card leaderboard">
       <div class="leaderboard-header">
-        <h3>Local Leaderboard (Top 10)</h3>
-        <div class="leaderboard-actions">
-          <button id="reset-leaderboard-button" class="btn btn-secondary btn-small">Reset</button>
-        </div>
+        <h3>Global Leaderboard (Top 10)</h3>
       </div>
       <div id="leaderboard-list" class="leaderboard-list"></div>
-      <p class="leaderboard-note">Saved on this device only.</p>
     </section>
 
     <footer class="footer">
-      &copy; 2023 Golferdle. All rights reserved.
+      &copy; 2026 Sun Day Yellow. All rights reserved.
     </footer>
   </main>
 

@@ -399,4 +399,71 @@ body{
   color: rgba(255,255,255,.65);
   font-size: 12px;
   padding: 8px 0 2px;
+}/* ========= Autocomplete ========= */
+.guess-input-wrap{
+  position: relative; /* anchor the dropdown to the input */
+  width: 100%;
+}
+
+.autocomplete-list{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+
+  display: none; /* JS toggles */
+  z-index: 999;  /* above sticky bar + cards */
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+  overflow: hidden;
+
+  max-height: min(320px, 45vh);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optional: subtle divider between items */
+.autocomplete-item{
+  padding: 11px 12px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.92);
+
+  cursor: pointer;
+  user-select: none;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.autocomplete-item:first-child{
+  border-top: none;
+}
+
+.autocomplete-item:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.autocomplete-item.active{
+  background: rgba(255,255,255,.16);
+  outline: 2px solid rgba(255,255,255,.10);
+  outline-offset: -2px;
+}
+
+/* Nice empty state if you ever add it */
+.autocomplete-empty{
+  padding: 10px 12px;
+  color: rgba(255,255,255,.70);
+  font-weight: 800;
+}
+
+/* Mobile: if the sticky bar is near the bottom, keep dropdown compact */
+@media (max-width: 480px){
+  .autocomplete-list{
+    max-height: 38vh;
+  }
 }
