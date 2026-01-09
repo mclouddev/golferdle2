@@ -1,0 +1,14 @@
+# Environment secrets
+.env
+
+# Supabase local config
+.supabase/
+.supabase/.temp
+
+# Editor / OS junk
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Optional tooling
+node_modules/

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Guesser</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- Top Nav / Score Bar -->
+  <nav id="stats-bar">
+    <div class="stats-left">
+      <div class="brand">
+        <span class="brand-icon">🏌️</span>
+        <span class="brand-text">Golf Guesser</span>
+      </div>
+    </div>
+
+    <div class="stats-right">
+      <div class="stat"><span class="label">Hole</span><span class="value"><span id="hole-number">1</span>/<span id="total-holes">18</span></span></div>
+      <div class="stat"><span class="label">Strokes</span><span id="total-strokes" class="value">0</span></div>
+      <div class="stat"><span class="label">This Hole</span><span id="hole-strokes" class="value">0</span></div>
+      <div class="stat"><span class="label">Remaining</span><span id="remaining-guesses" class="value">7</span></div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <header class="header">
+      <h1>GOLF GUESSER</h1>
+      <h2>Can you guess the pro golfer?</h2>
+
+      <button id="how-to-play-button" class="btn btn-secondary">How to Play</button>
+    </header>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="modal" aria-hidden="true">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-label="How to Play">
+        <button class="close-button" aria-label="Close">&times;</button>
+        <h2>How to Play</h2>
+        <p>
+          You’re playing a round of <b>18 holes</b>. Each hole is one pixelated golfer photo.
+          Each wrong guess reveals the image a bit more. Your goal is the lowest total strokes.
+        </p>
+        <ul class="rules-list">
+          <li>Correct guess on attempt #1 = 1 stroke (hole-in-one!)</li>
+          <li>Correct guess on attempt #4 = 4 strokes</li>
+          <li>Miss all guesses = 8 strokes (penalty)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- End of Round Modal -->
+    <div id="end-modal" class="modal" aria-hidden="true">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-label="Round Complete">
+        <h2>Round Complete ⛳</h2>
+        <p class="end-line">Total Strokes: <b id="final-strokes">0</b></p>
+
+        <label class="field-label" for="initials-input">Enter initials (1–3):</label>
+        <input id="initials-input" class="field-input" maxlength="3" placeholder="ABC" />
+
+        <div class="end-actions">
+          <button id="submit-score-button" class="btn btn-primary">Submit Score</button>
+          <button id="play-again-button" class="btn btn-secondary">Play Again</button>
+        </div>
+
+        <p id="end-error" class="error-text"></p>
+      </div>
+    </div>
+
+    <!-- Game Card -->
+    <section class="card">
+      <canvas id="game-container" width="500" height="500"></canvas>
+
+      <div id="message-container" class="message"></div>
+
+      <div class="guess-container">
+        <input
+          type="text"
+          id="guess-input"
+          placeholder="Enter a name"
+          autocomplete="off"
+          autocapitalize="words"
+        />
+        <button id="guess-button" class="btn btn-primary">Submit</button>
+        <button id="next-hole-button" class="btn btn-secondary" disabled>Next Hole</button>
+        <button id="restart-button" class="btn btn-secondary">Restart Round</button>
+      </div>
+    </section>
+
+    <!-- Guess History -->
+    <section class="history card">
+      <div class="history-header">
+        <h3>Your Guesses</h3>
+        <p class="history-sub">Duplicates are blocked so you can’t waste a guess.</p>
+      </div>
+      <div id="guess-history" class="guess-history"></div>
+    </section>
+
+    <!-- Leaderboard -->
+    <section class="card leaderboard">
+      <div class="leaderboard-header">
+        <h3>Local Leaderboard (Top 10)</h3>
+        <div class="leaderboard-actions">
+          <button id="reset-leaderboard-button" class="btn btn-secondary btn-small">Reset</button>
+        </div>
+      </div>
+      <div id="leaderboard-list" class="leaderboard-list"></div>
+      <p class="leaderboard-note">Saved on this device only.</p>
+    </section>
+
+    <footer class="footer">
+      &copy; 2023 Golferdle. All rights reserved.
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
