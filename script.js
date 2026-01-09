@@ -78,10 +78,12 @@ const images = [
   { path: "images/sahith.jpg", answer: "Sahith Theegala" },
   { path: "images/jt.jpg", answer: "Justin Thomas" },
   { path: "images/mckibbin.jpg", answer: "Tommy Mckibbin" },
+  { path: "images/aberg.jpg", answer: "Ludvig Aberg" },
   { path: "images/day.jpg", answer: "Jason Day" },
   { path: "images/hatton.jpg", answer: "Tyrell Hatton" },
   { path: "images/yuan.jpg", answer: "Carl Yuan" },
   { path: "images/lowry.jpg", answer: "Shane Lowry" },
+  { path: "images/daly.jpg", answer: "John Daly" },
   { path: "images/adamscott.jpg", answer: "Adam Scott" },
   { path: "images/woods.jpg", answer: "Tiger Woods" },
   { path: "images/mickelson.jpg", answer: "Phil Mickelson" },
@@ -90,8 +92,11 @@ const images = [
   { path: "images/xander.jpg", answer: "Xander Schauffele" },
   { path: "images/morikawa.jpg", answer: "Collin Morikawa" },
   { path: "images/wolff.jpg", answer: "Matthew Wolff" },
+  { path: "images/jack.jpg", answer: "Jack Nicklaus" },
   { path: "images/minwoo.jpg", answer: "Min Woo Lee" },
   { path: "images/henley.jpg", answer: "Rusell Henley" },
+  { path: "images/rose.jpg", answer: "Justin Rose" },
+  { path: "images/payne.jpg", answer: "Payne Stewart" },
   { path: "images/hideki.jpg", answer: "Hideki Matsuyama" }
 ];
 
